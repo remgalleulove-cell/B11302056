@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Challenge</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0f172a, #1d4ed8);
+        font-family: Arial, sans-serif;
+        color: #e2e8f0;
+      }
+
+      .quiz-box {
+        width: min(90vw, 700px);
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+        padding: 30px;
+      }
+
+      h1 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 2rem;
+      }
+
+      .question-wrap {
+        display: none;
+      }
+
+      .question-wrap.active {
+        display: block;
+      }
+
+      .question {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+        line-height: 1.5;
+      }
+
+      .options {
+        display: grid;
+        gap: 12px;
+      }
+
+      .option {
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(148, 163, 184, 0.08);
+        cursor: pointer;
+        transition: 0.2s ease;
+        font-size: 1rem;
+      }
+
+      .option:hover {
+        background: rgba(96, 165, 250, 0.15);
+      }
+
+      .option.correct {
+        background: rgba(34, 197, 94, 0.25);
+        border-color: rgba(34, 197, 94, 0.7);
+      }
+
+      .option.incorrect {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.7);
+      }
+
+      .controls {
+        margin-top: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 10px;
+        background: #38bdf8;
+        color: #082f49;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .result {
+        display: none;
+        text-align: center;
+      }
+
+      .result.active {
+        display: block;
+      }
+
+      .score {
+        font-size: 2.2rem;
+        margin: 16px 0;
+        color: #facc15;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="quiz-box">
+      <div id="quiz">
+        <div class="question-wrap active" data-index="0">
+          <h1>Quiz Challenge</h1>
+          <div class="question">1. Which HTML tag is used to create a hyperlink?</div>
+          <div class="options">
+            <div class="option" data-correct="false">&lt;img&gt;</div>
+            <div class="option" data-correct="true">&lt;a&gt;</div>
+            <div class="option" data-correct="false">&lt;link&gt;</div>
+            <div class="option" data-correct="false">&lt;div&gt;</div>
+          </div>
+        </div>
+
+        <div class="question-wrap" data-index="1">
+          <h1>Quiz Challenge</h1>
+          <div class="question">2. Which CSS property changes the text color?</div>
+          <div class="options">
+            <div class="option" data-correct="false">background-color</div>
+            <div class="option" data-correct="true">color</div>
+            <div class="option" data-correct="false">font-size</div>
+            <div class="option" data-correct="false">margin</div>
+          </div>
+        </div>
+
+        <div class="question-wrap" data-index="2">
+          <h1>Quiz Challenge</h1>
+          <div class="question">3. Which JavaScript keyword is used to declare a constant?</div>
+          <div class="options">
+            <div class="option" data-correct="false">let</div>
+            <div class="option" data-correct="false">var</div>
+            <div class="option" data-correct="true">const</div>
+            <div class="option" data-correct="false">function</div>
+          </div>
+        </div>
+
+        <div class="question-wrap" data-index="3">
+          <h1>Quiz Challenge</h1>
+          <div class="question">4. What does HTML stand for?</div>
+          <div class="options">
+            <div class="option" data-correct="false">HyperText Transfer Language</div>
+            <div class="option" data-correct="true">HyperText Markup Language</div>
+            <div class="option" data-correct="false">HighText Machine Language</div>
+            <div class="option" data-correct="false">Home Tool Markup Language</div>
+          </div>
+        </div>
+
+        <div class="result">
+          <h2>Quiz Finished!</h2>
+          <div class="score" id="score">0 / 4</div>
+          <button class="btn" onclick="location.reload()">Try Again</button>
+        </div>
+
+        <div class="controls">
+          <span id="progress">Question 1 of 4</span>
+          <button id="nextBtn" class="btn">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const questionWraps = [...document.querySelectorAll('.question-wrap')];
+      const nextBtn = document.getElementById('nextBtn');
+      const progress = document.getElementById('progress');
+      const result = document.querySelector('.result');
+      const scoreLabel = document.getElementById('score');
+
+      let currentIndex = 0;
+      let score = 0;
+
+      function updateProgress() {
+        progress.textContent = `Question ${currentIndex + 1} of ${questionWraps.length}`;
+      }
+
+      function showQuestion(index) {
+        questionWraps.forEach((wrap, i) => {
+          wrap.classList.toggle('active', i === index);
+        });
+        updateProgress();
+      }
+
+      function finishQuiz() {
+        questionWraps.forEach((wrap) => wrap.classList.remove('active'));
+        result.classList.add('active');
+        scoreLabel.textContent = `${score} / ${questionWraps.length}`;
+        nextBtn.disabled = true;
+        progress.textContent = 'Completed';
+      }
+
+      function handleAnswer(selectedOption) {
+        const currentWrap = questionWraps[currentIndex];
+        const options = currentWrap.querySelectorAll('.option');
+
+        options.forEach((option) => {
+          option.style.pointerEvents = 'none';
+          if (option.dataset.correct === 'true') {
+            option.classList.add('correct');
+          }
+        });
+
+        if (selectedOption.dataset.correct === 'true') {
+          score++;
+          selectedOption.classList.add('correct');
+        } else {
+          selectedOption.classList.add('incorrect');
+        }
+
+        nextBtn.disabled = false;
+      }
+
+      nextBtn.addEventListener('click', () => {
+        const currentWrap = questionWraps[currentIndex];
+        const selected = currentWrap.querySelector('.option.selected');
+
+        if (!selected) {
+          alert('Please select an answer first.');
+          return;
+        }
+
+        if (currentIndex < questionWraps.length - 1) {
+          currentIndex++;
+          showQuestion(currentIndex);
+          nextBtn.disabled = true;
+        } else {
+          finishQuiz();
+        }
+      });
+
+      document.querySelectorAll('.option').forEach((option) => {
+        option.addEventListener('click', () => {
+          const currentWrap = questionWraps[currentIndex];
+          const allOptions = currentWrap.querySelectorAll('.option');
+
+          if (currentWrap.querySelector('.option.selected')) {
+            return;
+          }
+
+          option.classList.add('selected');
+          handleAnswer(option);
+        });
+      });
+
+      showQuestion(currentIndex);
+      nextBtn.disabled = true;
+    </script>
+  </body>
+</html>
